@@ -5,7 +5,8 @@ const express = require("express");
 const app = express();
 const notFoundMiddleware = require("./middleware/not-found");
 const errorMiddleware = require("./middleware/error-handler");
-
+const connectDB = require("./db/connect");
+const productsRouter = require("./routes/products");
 //middleware
 app.use(express.json());
 
@@ -14,12 +15,26 @@ app.get("/", (req, res) => {
   res.send("<h1>Store API</h1><a href='/api/v1/products'>products route</a>");
 });
 
+app.use("/api/v1/products", productsRouter);
+
 //product route
 
 app.use(notFoundMiddleware); //404 middleware
 app.use(errorMiddleware); //It must be placed at the last
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`The app is listening on port :${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+
+const start = async () => {
+  try {
+    //mongodb connect
+    await connectDB(process.env.MONGO_URI);
+    console.log("Database connected successfully...");
+    app.listen(PORT, () => {
+      console.log(`The server is listening on port : ${PORT}...`);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+start();
