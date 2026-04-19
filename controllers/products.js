@@ -1,7 +1,11 @@
 const Products = require("../models/product");
 
 const getAllProductsStatic = async (req, res) => {
-  const product = await Products.find({}).select("name price");
+  const product = await Products.find({})
+    .limit(4)
+    .select("name price")
+    .sort("name")
+    .skip(1);
   res.status(200).json({ nbHits: product.length, product });
 };
 
@@ -37,6 +41,15 @@ const getAllProducts = async (req, res) => {
     const fieldList = fields.split(",").join(" ");
     result = result.select(fieldList);
   }
+
+  //pagenation, to get only limited number of output instead of everything
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  result = result.skip(skip).limit(limit);
+  //23 entries total here
+
   const products = await result;
   res.status(200).json({ nbHits: products.length, products });
 };
