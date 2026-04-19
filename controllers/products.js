@@ -1,14 +1,14 @@
 const Products = require("../models/product");
 
 const getAllProductsStatic = async (req, res) => {
-  const product = await Products.find({}).sort("-name");
+  const product = await Products.find({}).select("name price");
   res.status(200).json({ nbHits: product.length, product });
 };
 
 //all products dynamic rendering
 const getAllProducts = async (req, res) => {
   console.log(req.query); //{ name: 'john', featured: 'true' }
-  const { featured, company, name, sort } = req.query; //ony pulling out the featured and company out of the query
+  const { featured, company, name, sort, fields } = req.query; //ony pulling out the featured and company out of the query
 
   const queryObject = {};
   if (featured) {
@@ -22,11 +22,20 @@ const getAllProducts = async (req, res) => {
   }
   console.log(queryObject);
   let result = Products.find(queryObject); //directly passing the query object
+
+  //Sort functionality
   if (sort) {
     const sortList = sort.split(",").join(" "); //name,-price
     result = result.sort(sortList);
   } else {
     result = result.sort("createdAt"); //default sorting based on created at
+  }
+
+  //select fields, only displays the selected fields
+  //{{URL}}/products?fields=name,price
+  if (fields) {
+    const fieldList = fields.split(",").join(" ");
+    result = result.select(fieldList);
   }
   const products = await result;
   res.status(200).json({ nbHits: products.length, products });
